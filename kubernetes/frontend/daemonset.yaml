@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: site-pulse-360-frontend
+  name: site-pulse-360-frontend
+  namespace: site-pulse-360
+spec:
+  selector:
+    matchLabels:
+      app: site-pulse-360-frontend
+  template:
+    metadata:
+      labels:
+        app: site-pulse-360-frontend
+    spec:
+      imagePullSecrets:
+      - name: registry-gitlab-diller
+      containers:
+      - image: ${CI_REGISTRY_IMAGE}/frontend:${VERSION_FRONTEND}
+        name: frontend
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        ports:
+        - containerPort: 8080
+          name: http

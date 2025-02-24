@@ -1,0 +1,60 @@
+stages:
+- build
+- deploy
+
+build-backend:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+  - /kaniko/executor
+    --context "${CI_PROJECT_DIR}/backend"
+    --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile"
+    --destination "${CI_REGISTRY_IMAGE}/backend:${VERSION_BACKEND}"
+  rules:
+  - if: $VERSION_BACKEND
+
+build-frontend:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+  - /kaniko/executor
+    --context "${CI_PROJECT_DIR}/frontend"
+    --dockerfile "${CI_PROJECT_DIR}/frontend/Dockerfile"
+    --destination "${CI_REGISTRY_IMAGE}/frontend:${VERSION_FRONTEND}"
+  rules:
+  - if: $VERSION_FRONTEND
+
+deploy-backend:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
+  script:
+  - cat kubernetes/backend/* | envsubst | kubectl apply -f -
+  rules:
+  - if: $VERSION_BACKEND
+
+deploy-frontend:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
+  script:
+  - cat kubernetes/frontend/* | envsubst | kubectl apply -f -
+  rules:
+  - if: $VERSION_FRONTEND
+
+deploy-rest:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
+  script:
+  - kubectl create secret docker-registry registry-gitlab-diller --docker-server ${CI_REGISTRY} --docker-username ${CI_DEPLOY_USER} --docker-password ${CI_DEPLOY_PASSWORD} -n site-pulse-360 -oyaml --dry-run=client |kubectl apply -f -
+  - for folder in $(find . -type d -path "./kubernetes/*" ! -name "backend" ! -name "frontend"); do cat $folder/* | envsubst | kubectl apply -f -; done
+  rules:
+  - if: $VERSION_BACKEND || $VERSION_FRONTEND

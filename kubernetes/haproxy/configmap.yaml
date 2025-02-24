@@ -1,0 +1,34 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haproxy
+  namespace: haproxy
+data:
+  haproxy.cfg: |
+    global
+        maxconn 100
+
+    defaults
+        log global
+        mode tcp
+        retries 2
+        timeout client 30m
+        timeout connect 4s
+        timeout server 30m
+        timeout check 5s
+
+    listen stats
+        mode http
+        bind *:7000
+        stats enable
+        stats uri /
+
+    listen psq16sitepulse
+        bind *:5432
+        option httpchk
+        http-check expect status 200
+        default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+        server k3s-01 10.0.10.11:5432 maxconn 100 check port 8008
+        server k3s-02 10.0.10.12:5432 maxconn 100 check port 8008
+        server k3s-03 10.0.10.13:5432 maxconn 100 check port 8008

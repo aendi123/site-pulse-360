@@ -1,0 +1,9 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: site-pulse-360-backend-basic-auth
+  namespace: site-pulse-360
+spec:
+  basicAuth:
+    secret: site-pulse-360-backend-basic-auth

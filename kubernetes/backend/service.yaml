@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: site-pulse-360-backend
+  namespace: site-pulse-360
+spec:
+  ports:
+  - port: 3000
+    protocol: TCP
+    targetPort: 3000
+    name: http
+  selector:
+    app: site-pulse-360-backend
